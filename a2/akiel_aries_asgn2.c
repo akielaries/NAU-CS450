@@ -14,32 +14,36 @@ pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 
 // Function to simulate servicing a request
 void* request_routine(void* arg) {
-    int dispatcher_id = *((int*)arg);
+    int thread_id = *((int*)arg);
     int sleep_time = rand() % 5;  // Simulating random request time
+    printf("Service %d time = %d sec\n", thread_id, sleep_time);
     sleep(sleep_time);
     pthread_mutex_lock(&mutex);
+    printf("mutex lock on : %d \n", thread_id);
+
     if (serviced_requests < K) {
         serviced_requests++;
-        printf("Dispatcher %d serviced a request.\n", dispatcher_id);
+        printf("Thread %d serviced a request.\n", thread_id);
     }
+    printf("mutex unlock on : %d \n", thread_id);
     pthread_mutex_unlock(&mutex);
     pthread_exit(NULL);
 }
 
 // Function to simulate the dispatcher routine
 void* dispatcher_routine(void* arg) {
-    int dispatcher_id = *((int*)arg);
+    int thread_id = *((int*)arg);
     while (serviced_requests < K) {
         if (rand() % 2 == 0) {
-            printf("Dispatcher %d is busy.\n", dispatcher_id);
+            printf("Thread %d is busy.\n", thread_id);
         } else {
-            printf("Dispatcher %d is waiting for a request.\n", dispatcher_id);
+            printf("Thread %d is waiting for a request.\n", thread_id);
             int sleep_time = rand() % 3;  // Simulating random wait time
             sleep(sleep_time);
-            int request_dispatcher_id = rand() % N;
-            if (request_dispatcher_id == dispatcher_id) {
+            int request_thread_id = rand() % N;
+            if (request_thread_id == thread_id) {
                 pthread_t request_thread;
-                pthread_create(&request_thread, NULL, request_routine, &dispatcher_id);
+                pthread_create(&request_thread, NULL, request_routine, &thread_id);
                 pthread_join(request_thread, NULL);
             }
         }
@@ -52,11 +56,11 @@ double simulate(int N, int K) {
     srand(time(NULL));
 
     // Create dispatcher threads
-    pthread_t dispatchers[MAX_DISPATCHERS];
-    int dispatcher_ids[MAX_DISPATCHERS];
+    pthread_t dispatchers[N];
+    int thread_ids[N];
     for (int i = 0; i < N; i++) {
-        dispatcher_ids[i] = i;
-        pthread_create(&dispatchers[i], NULL, dispatcher_routine, &dispatcher_ids[i]);
+        thread_ids[i] = i;
+        pthread_create(&dispatchers[i], NULL, dispatcher_routine, &thread_ids[i]);
     }
 
     // Wait for dispatcher threads to finish
