@@ -3,74 +3,84 @@
 #include <pthread.h>
 #include <unistd.h>
 
-// Define the number of dispatchers and requests
 int N;
 int K;
-
-// Mutex to protect shared data
+int serviced_requests = 0;
+int declined_requests = 0;
+int busy_threads = 0;
 pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 
-// Global variables to keep track of the service level
-int totalServiced = 0;
-int totalRequests = 0;
+void* request_routine(void* arg) {
+    int thread_id = *((int*)arg);
+    int sleep_time = rand() % 5;
+    printf("Service %d time = %d sec\n", thread_id, sleep_time);
+    sleep(sleep_time);
 
-// Dispatcher thread function
-void* dispatcher(void* arg) {
-    int dispatcher_id = *((int*)arg);
-
-    while (1) {
-        // Simulate random request arrival
-        sleep(rand() % 5);
-
-        pthread_mutex_lock(&mutex);
-        if (totalRequests >= K) {
-            pthread_mutex_unlock(&mutex);
-            break; // All requests have been serviced
+    pthread_mutex_lock(&mutex);
+    if (serviced_requests + declined_requests < K) {
+        if (serviced_requests < K) {
+            serviced_requests++;
+            printf("Thread %d serviced a request. Total serviced: %d\n", thread_id, serviced_requests);
+        } else {
+            declined_requests++;
+            printf("Thread %d declined a request. Total declined: %d\n", thread_id, declined_requests);
         }
-
-        totalRequests++;
-
-        // Check if dispatcher is available
-        if (totalServiced < K) {
-            // Simulate random service time
-            sleep(rand() % 5);
-            totalServiced++;
-
-            printf("Dispatcher %d serviced a request. Total serviced: %d\n", dispatcher_id, totalServiced);
-        }
-        pthread_mutex_unlock(&mutex);
     }
+    pthread_mutex_unlock(&mutex);
+    pthread_exit(NULL);
+}
 
-    return NULL;
+void* dispatcher_routine(void* arg) {
+    int thread_id = *((int*)arg);
+    while (serviced_requests + declined_requests < K) {
+        if (rand() % 2 == 0) {
+            printf("Thread %d is busy.\n", thread_id);
+            busy_threads++;
+        } else {
+            pthread_mutex_lock(&mutex);
+            if (serviced_requests + declined_requests < K) {
+                pthread_mutex_unlock(&mutex);
+                printf("Thread %d is waiting for a request.\n", thread_id);
+                int sleep_time = rand() % 3;
+                sleep(sleep_time);
+                int request_thread_id = rand() % N;
+                if (request_thread_id == thread_id) {
+                    pthread_t request_thread;
+                    pthread_create(&request_thread, NULL, request_routine, &thread_id);
+                    pthread_join(request_thread, NULL);
+                }
+            } else {
+                pthread_mutex_unlock(&mutex);
+                break; // No more requests to service
+            }
+        }
+    }
+    pthread_exit(NULL);
 }
 
 double simulate(int N, int K) {
-    // Initialize random number generator
     srand(time(NULL));
 
-    // Create dispatcher threads
     pthread_t dispatchers[N];
-    int dispatcher_ids[N];
+    int thread_ids[N];
 
     for (int i = 0; i < N; i++) {
-        dispatcher_ids[i] = i + 1;
-        pthread_create(&dispatchers[i], NULL, dispatcher, &dispatcher_ids[i]);
+        thread_ids[i] = i;
+        pthread_create(&dispatchers[i], NULL, dispatcher_routine, &thread_ids[i]);
     }
 
-    // Wait for dispatcher threads to finish
     for (int i = 0; i < N; i++) {
         pthread_join(dispatchers[i], NULL);
     }
 
-    return (double)totalServiced / K;
+    double service_level = (double)serviced_requests / (serviced_requests + declined_requests + busy_threads);
+    return service_level;
 }
 
 int main(int argc, char* argv[]) {
-    // Default values of arguments
     N = 1;
     K = 10;
 
-    // Read arguments from the command line
     if (argc > 2) {
         N = atoi(argv[1]);
         K = atoi(argv[2]);
