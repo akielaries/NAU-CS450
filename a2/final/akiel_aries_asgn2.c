@@ -3,7 +3,7 @@
  * differently and agreed there was a lack of instruction, as always. It would
  * be nice for these remaing ~7 or so weeks for some sort of salvage to take
  * place where we can at least have clearly defined instructions for these
- * assignments and something to carry along with us after this class. So far, 
+ * assignments and something to carry along with us after this class. So far,
  * nothing of real world value has been taught or learned and has 100% been
  * a regurgitation of pthreads documentation knowledge and arbitrary assignments
  */
@@ -12,18 +12,16 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-// represents the number of dispatchers
-int N;
-// represents the number of requests to spread accross dispatchers
-int K;
-// number of completed requests
-int serviced_requests = 0;
-// number of requests waiting for dispatchers
-int declined_requests = 0;
-// number of threads that were traversed but busy
-int busy_threads = 0;
+// represents the number of dispatchers N and requests K to spread accross
+// the dispatchers
+int N, K;
+// number of completed requests, blocked requests, and busy threads
+int serviced_requests, blocked_requests, busy_threads = 0;
 // global pthread mutex INIT variable
 pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
+
+void *requests(void *arg);
+void *dispatcher(void *arg);
 
 /**
  * @brief This function I am using to simulate the process of a request being
@@ -45,7 +43,7 @@ void *requests(void *arg) {
     pthread_mutex_lock(&mutex);
     // if the amount of completed and denied requests is less than the total
     // keep going
-    if (serviced_requests + declined_requests < K) {
+    if (serviced_requests + blocked_requests < K) {
         // a request has not been serviced and is available for a dispatcher
         if (serviced_requests < K) {
             // increment number of completed requests
@@ -53,14 +51,6 @@ void *requests(void *arg) {
             printf("Thread %d serviced a request. Total complete: %d\n",
                    thread_id,
                    serviced_requests);
-        }
-        // otherwise the request is not ready for a dispatcher
-        else {
-            // increment number of waiting requests
-            declined_requests++;
-            printf("Thread %d declined a request. Total rejected: %d\n",
-                   thread_id,
-                   declined_requests);
         }
     }
     // unlock thread
@@ -90,7 +80,7 @@ void *dispatcher(void *arg) {
         // as long as the number of completed & declined requests is less than
         // the number of requests we can assume there are more requests to be
         // processed/dispatched, if not we assume there are no more request
-        if (serviced_requests + declined_requests >= K) {
+        if (serviced_requests + blocked_requests >= K) {
             // release the lock on this thread as it is free now
             pthread_mutex_unlock(&mutex);
             // break out of the while loop
@@ -98,14 +88,16 @@ void *dispatcher(void *arg) {
         }
 
         // more requests to be processed
-        else {
+        // else {
+        // if the number of busy threads is greater than the dispatchers
+        if (busy_threads < N) {
             // unlock mutex, freeing shared access to current thread
             pthread_mutex_unlock(&mutex);
 
             // simulate the business of the dispatcher with a random seed
             // between 0-2
             if (rand() % 2 == 0) {
-                printf("Thread %d is busy\n", thread_id);
+                printf("Thread %d is currently working\n", thread_id);
                 // lock on current thread
                 pthread_mutex_lock(&mutex);
                 // increment the number of "busy threads"
@@ -121,7 +113,7 @@ void *dispatcher(void *arg) {
 
                 // if there are still requests left, which is the assumption
                 // of this block
-                if (serviced_requests + declined_requests < K) {
+                if (serviced_requests + blocked_requests < K) {
                     // unlock current thread
                     pthread_mutex_unlock(&mutex);
                     printf("Thread %d is waiting for a request\n", thread_id);
@@ -135,15 +127,25 @@ void *dispatcher(void *arg) {
                     // call the function
                     if (request_thread_id == thread_id) {
                         // call the requests function
-                        requests(
-                            &thread_id); // Call the request function directly
+                        requests(&thread_id);
                     }
-                } else {
+                }
+                // no more requests left!!
+                else {
                     // final unlock on current thread
                     pthread_mutex_unlock(&mutex);
                     break; // no more requests to service
                 }
             }
+        }
+        // if the dispatcher is busy decline/block the request!
+        else {
+            // unlock thread
+            pthread_mutex_unlock(&mutex);
+            printf("Thread %d is busy, request blocked!!\n", thread_id);
+            // incriment number of blocked requests
+            blocked_requests++;
+            break;
         }
     }
     // EXIT CURRENT THREAD
@@ -209,10 +211,10 @@ double simulate(int N, int K) {
     }
 
     // service level determined by number of service requests and taking into
-    // account blocked/busy/declined dispatches
-    double service_level =
-        (double)serviced_requests /
-        (serviced_requests + declined_requests + busy_threads);
+    // account blocked/busy/declined dispatches. calculated based on the global
+    // serviced_requests (completed) minus blocked_requests (blocked) divided
+    // by the total number of specified requests
+    double service_level = serviced_requests - blocked_requests / K;
     return service_level;
 }
 
