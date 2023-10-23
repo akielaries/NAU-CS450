@@ -1,8 +1,8 @@
+#include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
-#include <pthread.h>
 #include <time.h>
+#include <unistd.h>
 
 #define CYCLES 100
 #define MAX_SHIPMENT 50
@@ -14,27 +14,26 @@ pthread_cond_t cond;
 
 int parcels = 0;
 
-void* incoming_flow() {
+void *incoming_flow() {
 
-    for (int i = 0; i < CYCLES; i++)
-    {
+    for (int i = 0; i < CYCLES; i++) {
         int shipment = rand() % MAX_SHIPMENT + 1;
-        
+
         pthread_mutex_lock(&mutex);
 
         parcels += shipment;
         printf("%d parcels shipped. Total parcels: %d\n", shipment, parcels);
-        
+
         pthread_mutex_unlock(&mutex);
         pthread_cond_broadcast(&cond);
 
         sleep(1);
     }
-    
+
     return NULL;
 }
 
-void* deliver() {
+void *deliver() {
 
     pthread_mutex_lock(&mutex);
 
@@ -42,7 +41,7 @@ void* deliver() {
         printf("Not enough parcels. Waiting...\n");
         pthread_cond_wait(&cond, &mutex);
     }
-    
+
     parcels -= CAPACITY;
     printf("Run servicing. Parcels left: %d\n", parcels);
 
@@ -62,19 +61,15 @@ int main() {
     pthread_mutex_init(&mutex, NULL);
 
     pthread_create(&th_hub, NULL, incoming_flow, NULL);
-    for (i = 0; i < VEHICLES; i++)
-    {
+    for (i = 0; i < VEHICLES; i++) {
         pthread_create(&th_vehicle[i], NULL, deliver, NULL);
     }
 
-
     pthread_join(th_hub, NULL);
-    for (i = 0; i < VEHICLES; i++)
-    {
+    for (i = 0; i < VEHICLES; i++) {
         pthread_join(th_vehicle[i], NULL);
     }
 
     pthread_mutex_destroy(&mutex);
     pthread_cond_destroy(&cond);
-
 }

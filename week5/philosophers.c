@@ -1,8 +1,8 @@
-#include <unistd.h>
-#include <stdio.h>
 #include <pthread.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include <unistd.h>
 
 #define N 5
 #define ITER 1000
@@ -34,20 +34,20 @@ int main() {
     pthread_t thread[N];
 
     for (i = 0; i < N; i++) {
-      // initially all forks available
-      forks[i] = 1;
-      // initial values for waiting time
-      sleeps[i] = 0;
+        // initially all forks available
+        forks[i] = 1;
+        // initial values for waiting time
+        sleeps[i] = 0;
     }
     // initialize waiter lock
     pthread_mutex_init(&mutex, NULL);
     // create philosopher threads
     for (i = 0; i < N; i++) {
-        int* idx = malloc(sizeof(int));
+        int *idx = malloc(sizeof(int));
         *idx = i;
         pthread_create(&thread[i], NULL, philosopher, (void *)idx);
     }
-    // join with the threads 
+    // join with the threads
     for (i = 0; i < N; i++) {
         pthread_join(thread[i], NULL);
     }
@@ -56,11 +56,11 @@ int main() {
         printf("\nPhilosopher: %d Number of sleeps: %d", i, sleeps[i]);
     }
     pthread_mutex_destroy(&mutex);
-    return 0; 
+    return 0;
 }
 
 void *philosopher(void *arg) {
-    int id = *(int*)arg;
+    int id = *(int *)arg;
     int count = 0;
     while (count < ITER) {
         think(id);
@@ -96,7 +96,7 @@ int waiter(int id) {
 }
 
 // simulate thinking
-void think(int id) {   
+void think(int id) {
     printf("\nPhilosopher %d thinking", id);
     usleep((rand() % N + 1) * SPEED);
 }

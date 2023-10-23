@@ -1,9 +1,8 @@
 #include <stdio.h>
 #include <unistd.h>
 
-int main()
-{
-	printf("Before fork\n");
+int main() {
+    printf("Before fork\n");
     fork();
     printf("After 1st fork\n");
     fork();

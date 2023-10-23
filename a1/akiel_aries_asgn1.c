@@ -55,7 +55,7 @@ void *calc(void *arg) {
         perror("Memory allocation error");
         exit(EXIT_FAILURE);
     }
-    
+
     *result = local_area;
     args->area = result;
 
@@ -92,7 +92,7 @@ double calc_area(double x0, double x1, double dx, int nthreads) {
         double *result;
         pthread_join(threads[i], (void **)&result);
         // accumulate the local areas to get the total area
-        //area += *(args[i].area);
+        // area += *(args[i].area);
         area += *result;
         free(result);
     }

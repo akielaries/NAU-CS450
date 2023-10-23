@@ -1,8 +1,8 @@
+#include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <pthread.h>
-#include <unistd.h>
 #include <time.h>
+#include <unistd.h>
 
 #define MAX_DISPATCHERS 10
 #define MAX_REQUESTS 100
@@ -13,9 +13,9 @@ int serviced_requests = 0;
 pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 
 // Function to simulate servicing a request
-void* request_routine(void* arg) {
-    int thread_id = *((int*)arg);
-    int sleep_time = rand() % 5;  // Simulating random request time
+void *request_routine(void *arg) {
+    int thread_id = *((int *)arg);
+    int sleep_time = rand() % 5; // Simulating random request time
     printf("Service %d time = %d sec\n", thread_id, sleep_time);
     sleep(sleep_time);
     pthread_mutex_lock(&mutex);
@@ -31,19 +31,22 @@ void* request_routine(void* arg) {
 }
 
 // Function to simulate the dispatcher routine
-void* dispatcher_routine(void* arg) {
-    int thread_id = *((int*)arg);
+void *dispatcher_routine(void *arg) {
+    int thread_id = *((int *)arg);
     while (serviced_requests < K) {
         if (rand() % 2 == 0) {
             printf("Thread %d is busy.\n", thread_id);
         } else {
             printf("Thread %d is waiting for a request.\n", thread_id);
-            int sleep_time = rand() % 3;  // Simulating random wait time
+            int sleep_time = rand() % 3; // Simulating random wait time
             sleep(sleep_time);
             int request_thread_id = rand() % N;
             if (request_thread_id == thread_id) {
                 pthread_t request_thread;
-                pthread_create(&request_thread, NULL, request_routine, &thread_id);
+                pthread_create(&request_thread,
+                               NULL,
+                               request_routine,
+                               &thread_id);
                 pthread_join(request_thread, NULL);
             }
         }
@@ -60,7 +63,10 @@ double simulate(int N, int K) {
     int thread_ids[N];
     for (int i = 0; i < N; i++) {
         thread_ids[i] = i;
-        pthread_create(&dispatchers[i], NULL, dispatcher_routine, &thread_ids[i]);
+        pthread_create(&dispatchers[i],
+                       NULL,
+                       dispatcher_routine,
+                       &thread_ids[i]);
     }
 
     // Wait for dispatcher threads to finish
@@ -72,7 +78,7 @@ double simulate(int N, int K) {
     return service_level;
 }
 
-int main(int argc, char* argv[]) {
+int main(int argc, char *argv[]) {
     // Default values of arguments:
     // 1) number of dispatchers
     N = 1;
@@ -94,4 +100,3 @@ int main(int argc, char* argv[]) {
 
     return 0;
 }
-

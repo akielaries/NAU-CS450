@@ -1,33 +1,29 @@
-#include <stdio.h>
-#include <stdlib.h>
 #include <math.h>
 #include <pthread.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 #define PI (3.141592653589793)
 
-struct arguments
-{
+struct arguments {
     // do not change the structure!
     double start;
     double finish;
     double precision;
-    double* area;
+    double *area;
 };
 
-double f(double x)
-{
+double f(double x) {
     // returns density function for standard normal distribution
     return 1 / (sqrt(2 * PI)) * exp(-0.5 * x * x);
 }
 
-double trapeze_area(double a, double b, double h)
-{
+double trapeze_area(double a, double b, double h) {
     // return the area of a trapeze with bases a and b and height h
     return 0.5 * (a + b) * h;
 }
 
-void* calc(void* arg)
-{
+void *calc(void *arg) {
     // calculations to be performed in a thread
 
     // put your code here
@@ -35,20 +31,18 @@ void* calc(void* arg)
     return NULL;
 }
 
-double calc_area(double x0, double x1, double dx, int nthreads)
-{
+double calc_area(double x0, double x1, double dx, int nthreads) {
     // caclulates the area under the curve between x0 and x1
     // with the precision dx by using nthreads threads
 
     double area = 0;
-    
+
     // put your code here
 
     return area;
 }
 
-int main(int argc, char* argv[])
-{   
+int main(int argc, char *argv[]) {
     // default values of arguments:
     // 1-2) range (lower and upper bounds)
     double x0 = 0, x1 = 1;
@@ -59,8 +53,7 @@ int main(int argc, char* argv[])
 
     // read arguments from console
     // assume that correct values and correct number of arguments were provided
-    if (argc > 1)
-    {
+    if (argc > 1) {
         x0 = atof(argv[1]);
         x1 = atof(argv[2]);
         prec = atof(argv[3]);
