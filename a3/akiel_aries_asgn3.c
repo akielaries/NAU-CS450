@@ -14,6 +14,14 @@ double calc_area(double x0, double x1, long points) {
     double area = 0;
 
     // put your code here
+    double dx = (x1 - x0) / points;
+
+    // Use an OpenMP parallel for loop to distribute the work among threads.
+    #pragma omp parallel for reduction(+:area)
+    for (long i = 0; i < points; i++) {
+        double x = x0 + i * dx;
+        area += f(x) * dx;
+    }
 
     return area;
 }
