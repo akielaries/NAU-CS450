@@ -1,53 +1,49 @@
-#include <stdio.h>
-#include <time.h>
 #include <math.h>
 #include <omp.h>
+#include <stdio.h>
 #include <sys/time.h>
+#include <time.h>
 
-double function_to_parallelize(int N, int M)
-{
+
+double function_to_parallelize(int N, int M) {
     long i, j;
     long A = 0;
     double B = 0, C = 0, D = 0;
 
-    // Parallelize the outer loop
-    #pragma omp parallel for reduction(+:A) private(j)
-    for (i = 0; i < N; i++)
-    {
-        for (j = 0; j < M; j++)
-        {
+
+    for (i = 0; i < N; i++) {
+        for (j = 0; j < M; j++) {
             A += i * j;
+            //printf("%ld * %ld A += %ld\n", i, j, A);
         }
     }
 
-    #pragma omp parallel for reduction(+:B)
-    for (i = 1; i < (long)sqrt(A); i++)
+    for (i = 1; i < (long)sqrt(A); i++) {
         B += 1 / i;
-
-    #pragma omp parallel for reduction(+:D) private(j)
-    for (i = 0; i < M * N; i++)
-    {
-        for (j = 0; j < M; j++)
-        {
-            D += pow(0.1, i * j);
-        }
+        //printf("1 / %ld B += %f\n", i, B);
     }
+
+    for (i = 0; i < M * N; i++)
+        for (j = 0; j < M; j++) {
+            D += pow(0.1, i * j);
+            //printf("D += %lf\n", D);
+        }
 
     #pragma omp parallel for reduction(+:C)
     for (i = 0; i < (long)B * (N + 1); i++)
-    {
-        for (j = 1; j < (long)sqrt(D); j++)
-        {
+        for (j = 1; j < (long)sqrt(D); j++) {
             C += i / j;
+            //printf("C += %lf\n", C);
         }
-    }
 
-    return A + B - C / D;
+    double result = A + B - C / D;
+    printf("Result: %ld + %f - %f / %f = %lf\n", A, B, C, D, result);
+    return result;
 
+    // return A + B - C / D;
 }
 
-int main()
-{
+int main() {
     // the number of threads may stay deterministic
     omp_set_num_threads(2);
 
@@ -56,7 +52,7 @@ int main()
 
     start_time = clock();
 
-    double result = function_to_parallelize(200, 200);
+    double result = function_to_parallelize(200,200);
 
     end_time = clock();
 
