@@ -1,3 +1,8 @@
+/**
+ * Akiel Aries aba275
+ * I've had to do a few monte carlo related simulations for benchmarking
+ * purposes so I used similar logic/idea from that
+ */
 #include <math.h>
 #include <omp.h>
 #include <stdio.h>
@@ -11,19 +16,37 @@ double f(double x) {
 }
 
 double calc_area(double x0, double x1, long points) {
-    double area = 0;
+    // points that fall within our x0 and x1
+    int successes = 0;
 
-    // put your code here
-    double dx = (x1 - x0) / points;
-
-    // Use an OpenMP parallel for loop to distribute the work among threads.
-    #pragma omp parallel for reduction(+:area)
+    // paralell region to caclulate number of successes (points within the range)
+    #pragma omp parallel for reduction(+:successes)
     for (long i = 0; i < points; i++) {
-        double x = x0 + i * dx;
-        area += f(x) * dx;
-    }
+        // the range of x0 -> x1 default should be 1
+        double range = x1 - x0;
+        // random x value, taken from ex_pi_monte_carlo_0.c and my own monte carlo efforts
+        double rand_x = ((double)rand() / RAND_MAX);
+        // random y value
+        double rand_y = ((double)rand() / RAND_MAX);
 
-    return area;
+        // random x value based on the ranges provided
+        double x = x0 + rand_x * range;
+        // random y value using the distribution function above
+        double y = rand_y * f(0);
+
+        // check whether the generated points lie within the density function's curve
+        if (y <= f(x)) {
+            // this could probably be atomic but the result is the same regardless
+            successes++;
+        }
+    }
+    // calculate area simlar to how assignment one was operating
+    double area = (x1 - x0) * f(0);
+    // calculate CDF based on number of points within the curve/total points
+    double cdf = (double)successes / points;
+
+    // esitmated CDF * the calculated area under the curve
+    return cdf * area;
 }
 
 int main(int argc, char *argv[]) {
@@ -42,7 +65,7 @@ int main(int argc, char *argv[]) {
         x1 = atof(argv[2]);
         points = atof(argv[3]);
         threads = atoi(argv[4]);
-    }
+    }   
 
     printf("lower bound = %f\n", x0);
     printf("upper bound = %f\n", x1);
@@ -56,3 +79,4 @@ int main(int argc, char *argv[]) {
 
     return 0;
 }
+
