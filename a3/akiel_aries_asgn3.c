@@ -19,12 +19,13 @@ double calc_area(double x0, double x1, long points) {
     // points that fall within our x0 and x1
     int successes = 0;
 
-    // paralell region to caclulate number of successes (points within the range)
-    #pragma omp parallel for reduction(+:successes)
+// paralell region to caclulate number of successes (points within the range)
+#pragma omp parallel for reduction(+ : successes)
     for (long i = 0; i < points; i++) {
         // the range of x0 -> x1 default should be 1
         double range = x1 - x0;
-        // random x value, taken from ex_pi_monte_carlo_0.c and my own monte carlo efforts
+        // random x value, taken from ex_pi_monte_carlo_0.c and my own monte
+        // carlo efforts
         double rand_x = ((double)rand() / RAND_MAX);
         // random y value
         double rand_y = ((double)rand() / RAND_MAX);
@@ -34,9 +35,11 @@ double calc_area(double x0, double x1, long points) {
         // random y value using the distribution function above
         double y = rand_y * f(0);
 
-        // check whether the generated points lie within the density function's curve
+        // check whether the generated points lie within the density function's
+        // curve
         if (y <= f(x)) {
-            // this could probably be atomic but the result is the same regardless
+            // this could probably be atomic but the result is the same
+            // regardless
             successes++;
         }
     }
@@ -65,7 +68,7 @@ int main(int argc, char *argv[]) {
         x1 = atof(argv[2]);
         points = atof(argv[3]);
         threads = atoi(argv[4]);
-    }   
+    }
 
     printf("lower bound = %f\n", x0);
     printf("upper bound = %f\n", x1);
@@ -79,4 +82,3 @@ int main(int argc, char *argv[]) {
 
     return 0;
 }
-
