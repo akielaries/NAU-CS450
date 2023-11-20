@@ -39,7 +39,7 @@ double function_to_parallelize(int N, int M) {
         }
     }
 
-#pragma omp parallel for private(i, j) reduction(+ : C) schedule(static)
+    #pragma omp parallel for private(i, j) reduction(+ : C) schedule(static)
     for (i = 0; i < (long)B * (N + 1); i++) {
         for (j = 1; j < (long)sqrt(D); j++) {
             C += i / j;
@@ -60,7 +60,7 @@ int main() {
 
     start_time = clock();
 
-    double result = function_to_parallelize(400, 500);
+    double result = function_to_parallelize(200, 300);
 
     end_time = clock();
 

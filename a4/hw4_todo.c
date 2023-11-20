@@ -46,7 +46,7 @@ int main() {
 
     start_time = clock();
 
-    double result = function_to_parallelize(400, 500);
+    double result = function_to_parallelize(200, 300);
 
     end_time = clock();
 
