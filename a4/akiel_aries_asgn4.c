@@ -15,7 +15,7 @@
 #include <math.h>
 #include <omp.h>
 #include <stdio.h>
-#include <sys/time.h>
+//#include <sys/time.h>
 #include <time.h>
 
 double function_to_parallelize(int N, int M) {
