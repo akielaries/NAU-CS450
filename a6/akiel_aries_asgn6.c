@@ -1,3 +1,5 @@
+// Akiel Aries aba275
+
 #include <math.h>
 #include <omp.h>
 #include <pthread.h>
@@ -145,6 +147,51 @@ int main(int argc, char *argv[]) {
     // here put your commentaries about the achieved speedup and execution time
     // (you may additionally provide parameters of the machine used to run the
     // experiment)
+    // $ lscpu
+    // Architecture:            x86_64
+    // CPU op-mode(s):        32-bit, 64-bit
+    //  Address sizes:         39 bits physical, 48 bits virtual
+    //  Byte Order:            Little Endian
+    // CPU(s):                  4
+    //  On-line CPU(s) list:   0-3
+    // Vendor ID:               GenuineIntel
+    //  Model name:            Intel(R) Core(TM) i5-6300U CPU @ 2.40GHz
+    //
+    //
+    //  RUNS:
+    //  1.
+    //  $ ./a.out
+    //  lower bound = 0.000000
+    //  upper bound = 1.000000
+    //  precision = 0.000001
+    //  threads = 1
+    //  area = 0.341345, 0.341345
+    //  time = 0.029580 (pthreads), 0.013835 (openmp tasks)
+    //  speedup = 1.041516 (pthreads), 0.992368 (openmp tasks)
+    //
+    //  2.
+    //  $ ./a.out 0 1 0.000001 4
+    //  lower bound = 0.000000
+    //  upper bound = 1.000000
+    //  precision = 0.000001
+    //  threads = 4
+    //  area = 0.341345, 0.341345
+    //  time = 0.017414 (pthreads), 0.013709 (openmp tasks)
+    //  speedup = 1.700906 (pthreads), 0.958911 (openmp tasks)
+    //
+    //  3. ./a.out 0 1 0.001 3
+    //  lower bound = 0.000000
+    //  upper bound = 1.000000
+    //  precision = 0.001000
+    //  threads = 3
+    //  area = 0.341970, 0.341345
+    //  time = 0.000519 (pthreads), 0.000065 (openmp tasks)
+    //  speedup = 0.159813 (pthreads), 0.250366 (openmp tasks)
+    //
+    //  THOUGHTS:
+    //  OpenMP for once seems to be optimally spawning threads without creating too much
+    //  additional overhead. I tested it with a variety of parameters showing 3 example
+    //  runs above using 1, 4 and 3 threads with 4 producing the most amount of "speedup"
 
     return 0;
 }
